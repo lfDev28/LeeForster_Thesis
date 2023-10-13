@@ -1,0 +1,51 @@
+version: '3'
+
+services:
+  frontend: 
+    build: 
+      context: ./thesis_frontend
+      dockerfile: Dockerfile-frontend
+
+    ports:
+      - "3000:3000"
+      
+  backend: 
+    build: 
+      context: ./thesis_backend
+      dockerfile: Dockerfile-flask
+
+    ports:
+      - "8000:8000"
+
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+  mongodb: 
+    image: "mongo:4.4"
+    ports:
+      - "27017:27017"
+        
+    volumes: 
+      - "mongodb-data:/data/db"
+
+  rabbitmq:
+    image: "rabbitmq:management"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  celery:
+    build: 
+      context: ./thesis_backend
+      dockerfile: Dockerfile-celery
+
+    depends_on:
+      - rabbitmq
+      - mongodb
+
+    command: celery -A run.celery worker --loglevel=info
+      
+volumes:
+  mongodb-data:
+
