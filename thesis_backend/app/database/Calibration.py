@@ -9,6 +9,8 @@ class CalibrationBySerial(db.EmbeddedDocument):
     calibration_spectrum = db.ListField(db.FloatField())
     aux_calibration_spectrum = db.ListField(db.FloatField())
     aux_dut_spectrum = db.ListField(db.FloatField())
+    lamp_factor = db.ListField(db.FloatField())
+    sphere_calibration_factor = db.ListField(db.FloatField())
 
 
 class CalibrationDb(db.Document):
@@ -18,6 +20,7 @@ class CalibrationDb(db.Document):
     calibration_by_serial = db.DictField(
         db.EmbeddedDocumentField(CalibrationBySerial))
     metadata = db.DictField()
+
 
     @staticmethod
     def new_calibration(metadata={}):
@@ -155,3 +158,40 @@ class CalibrationDb(db.Document):
     @staticmethod
     def delete_calibration(cal_id):
         return CalibrationDb.objects(id=cal_id).delete()
+    
+    @staticmethod
+    def get_cal_dark_data(cal_id, serial_number):
+        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+        return calibration.calibration_by_serial[serial_number].dark_spectrum
+    
+    @staticmethod
+    def add_lamp_factor(cal_id, serial_number, lamp_factor):
+        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+
+        update_dict = {
+            f'set__calibration_by_serial__{serial_number}__lamp_factor': lamp_factor
+        }
+
+        calibration.update(**update_dict)
+
+        calibration.save()
+        return calibration
+    
+    @staticmethod
+    def get_lamp_factor(cal_id, serial_number):
+        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+        return calibration.calibration_by_serial[serial_number].lamp_factor
+    
+    @staticmethod
+    def add_sphere_calibration_factor(cal_id, serial_number, sphere_calibration_factor):
+        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+
+        update_dict = {
+            f'set__calibration_by_serial__{serial_number}__sphere_calibration_factor': sphere_calibration_factor
+        }
+
+        calibration.update(**update_dict)
+
+        calibration.save()
+        return calibration
+    

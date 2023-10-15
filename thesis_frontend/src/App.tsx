@@ -29,6 +29,12 @@ export type TSpectrometerData = {
   };
   model: string;
   manufacturer: string;
+  low_interpolation: number;
+  high_interpolation: number;
+  cal_intergration_time: number;
+  cal_scans_to_average: number;
+  aux_intergration_time: number;
+  aux_scans_to_average: number;
 };
 
 export type TSerialPortData = {
@@ -55,7 +61,6 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
-
       });
       return res.data as TDashboardData;
     },
@@ -78,7 +83,7 @@ function App() {
   const connectMcu = useMutation({
     mutationKey: ['mcuConnect'],
     mutationFn: async (port: string) => {
-      const res = await  new Promise((resolve) => setTimeout(resolve, 2000))
+      const res = await new Promise((resolve) => setTimeout(resolve, 2000));
       return res;
     },
     onError: (err: any) => {
