@@ -2,6 +2,7 @@ import {
   TCalibrationById,
   TCalibrationBySerial,
 } from '../../routes/spectrometer/Calibration';
+import Grid from "@mui/material/Grid"
 import { TLineChart } from '../main/CustomLineChart';
 
 import React from 'react';
@@ -12,15 +13,51 @@ type TCalibrationChartProps = {
   data: TCalibrationById;
 };
 
+const getStatusString = (yAxis: number[] | undefined) => {
+  if (!yAxis) {
+    return "In Progress";
+  } 
+  if (yAxis.length > 0) {
+    return "Completed";
+  } else {
+    return "In Progress";
+  }
+
+}
+
+function getGridSize(amount: number) {
+  if(amount > 1) {
+    return 6;
+
+  } else {
+    return 12;
+  }
+}
+
 const CalibrationChart: React.FC<TCalibrationChartProps> = ({ step, data }) => {
   const chartPropsArray = getChartPropsForStep(step, data);
 
   return (
-    <>
-      {chartPropsArray.map((chartProps, index) => {
-        <CustomLineChart key={index} {...chartProps} />;
-      })}
-    </>
+
+            <Grid container spacing={2}>
+              {
+                chartPropsArray.length > 1 ? (
+                  chartPropsArray.map((chartProps, index) => (
+                    <Grid item md={12} lg={getGridSize(chartPropsArray.length)} key={index}>
+                      <CustomLineChart {...chartProps} status={getStatusString(chartProps.yAxis)} />
+                    </Grid>
+                  ))
+                ) : (
+                  <Grid item xs={12}>
+                    <CustomLineChart {...chartPropsArray[0]} status={getStatusString(chartPropsArray[0]?.yAxis)} />
+                  </Grid>
+                )
+              }
+
+              </Grid>
+  
+
+
   );
 };
 

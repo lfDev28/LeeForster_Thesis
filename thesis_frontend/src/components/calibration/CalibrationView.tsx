@@ -13,6 +13,10 @@ import Edit from '@mui/icons-material/Edit';
 import {useMutation} from '@tanstack/react-query';
 import axios from 'axios';
 import { useToast, EToastTypes } from '../Context/ToastContext';
+import CalibrationChart from './CalibrationChart';
+
+
+const steps = [0,1,2,3];
 
 type TFormValues = {
   description: string;
@@ -127,6 +131,18 @@ const CalibrationView = ({
           </Box>
         </>
       )}
+      {/* <div className="space-y-4"> */}
+      {
+        steps.map((step) => {
+          return (
+            <CalibrationChart step={step} data={calibration} />
+
+          )
+        })
+
+      }
+      {/* </div> */}
+
     </Card>
   );
 };

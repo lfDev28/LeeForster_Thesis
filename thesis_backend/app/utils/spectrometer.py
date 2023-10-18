@@ -731,6 +731,8 @@ class Spectrometer:
                 CalibrationDb.add_aux_dut_spectrum(cal_id, device["serial_number"], spectrum_dut)
                 self.disconnect(device["handle"])
 
+            CalibrationDb.mark_completed(cal_id)
+
             return
 
         except Exception as e:

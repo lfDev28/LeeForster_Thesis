@@ -286,7 +286,8 @@ const CalibrationStepper = ({
         has_data: doesStepHaveData(activeStep),
       })}
 
-      <div className="pt-10">
+      <div className="pt-10 space-y-4">
+
         <CalibrationChart step={activeStep} data={calibration} />
       </div>
     </>

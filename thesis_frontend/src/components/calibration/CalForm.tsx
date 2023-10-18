@@ -1,12 +1,12 @@
 import React from 'react';
-import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { TCalibrationFormProps } from './CalibrationStepper';
+import Card  from '@mui/material/Card';
 
 const CalForm = ({ mutation, cal_id, has_data }: TCalibrationFormProps) => {
   return (
-    <Box sx={{ mt: 2, padding: 3, border: '1px solid #ddd', borderRadius: 2 }}>
+    <Card sx={{ mt: 2, padding: 3, border: '1px solid #ddd', borderRadius: 2,  }}>
       <Typography variant="h6" gutterBottom>
         Measure Cal
       </Typography>
@@ -21,7 +21,7 @@ const CalForm = ({ mutation, cal_id, has_data }: TCalibrationFormProps) => {
       >
         Measure Cal
       </Button>
-    </Box>
+    </Card>
   );
 };
 

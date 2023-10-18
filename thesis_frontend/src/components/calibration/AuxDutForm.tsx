@@ -1,5 +1,5 @@
 import React from 'react';
-import Box from '@mui/material/Box';
+import Card from '@mui/material/Card';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { TCalibrationFormProps } from './CalibrationStepper';
@@ -11,7 +11,7 @@ const AuxDutForm = ({
   has_data,
 }: TCalibrationFormProps) => {
   return (
-    <Box sx={{ mt: 2, padding: 3, border: '1px solid #ddd', borderRadius: 2 }}>
+    <Card sx={{ mt: 2, padding: 3, border: '1px solid #ddd', borderRadius: 2 }}>
       <Typography variant="h6" gutterBottom>
         Aux + DUT
       </Typography>
@@ -27,7 +27,7 @@ const AuxDutForm = ({
       >
         Measure AUX + DUT
       </Button>
-    </Box>
+    </Card>
   );
 };
 
