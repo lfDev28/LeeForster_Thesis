@@ -102,6 +102,7 @@ const SpectrometerModal = ({
           control={control}
           spectrometer={spectrometer}
           onSubmit={onSubmit}
+          register={register}
           setIsEditMode={setIsEditMode}
           handleSubmit={handleSubmit}
         />
@@ -115,6 +116,7 @@ const SpectrometerModal = ({
 const SpectrometerForm = ({
   control,
   spectrometer,
+  register,
   onSubmit,
   setIsEditMode,
   handleSubmit,
@@ -124,6 +126,7 @@ const SpectrometerForm = ({
   onSubmit: any;
   setIsEditMode: (val: boolean) => void;
   handleSubmit: any;
+  register: any;
 }) => {
   return (
     <>
@@ -188,6 +191,10 @@ const SpectrometerForm = ({
               defaultValue={spectrometer.low_interpolation}
               render={({ field }) => (
                 <TextField
+                {...register('low_interpolation', {
+                  valueAsNumber: true,
+                })
+              } 
                   label="Low Interpolation"
                   type="number"
                   variant="outlined"
@@ -203,6 +210,10 @@ const SpectrometerForm = ({
               defaultValue={spectrometer.high_interpolation}
               render={({ field }) => (
                 <TextField
+                {...register('high_interpolation', {
+                  valueAsNumber: true,
+                })
+                }
                   label="High Interpolation"
                   type="number"
                   variant="outlined"
@@ -213,11 +224,15 @@ const SpectrometerForm = ({
             />
 
             <Controller
-              name="cal_intergration_time"
+              name="cal_integration_time"
               control={control}
               defaultValue={spectrometer.cal_intergration_time}
               render={({ field }) => (
                 <TextField
+                {...register('cal_intergration_time', {
+                  valueAsNumber: true,
+                })
+                }
                   label="Calibration Integration Time"
                   type="number"
                   variant="outlined"
@@ -233,6 +248,10 @@ const SpectrometerForm = ({
               defaultValue={spectrometer.cal_scans_to_average}
               render={({ field }) => (
                 <TextField
+                {...register('cal_scans_to_average', {
+                  valueAsNumber: true,
+                })
+                }
                   label="Calibration Scans to Average"
                   type="number"
                   variant="outlined"
@@ -243,11 +262,15 @@ const SpectrometerForm = ({
             />
 
             <Controller
-              name="aux_intergration_time"
+              name="aux_integration_time"
               control={control}
               defaultValue={spectrometer.aux_intergration_time}
               render={({ field }) => (
                 <TextField
+                {...register('aux_integration_time', {
+                  valueAsNumber: true,
+                })
+                }
                   label="Auxiliary Integration Time"
                   type="number"
                   variant="outlined"
@@ -263,6 +286,10 @@ const SpectrometerForm = ({
               defaultValue={spectrometer.aux_scans_to_average}
               render={({ field }) => (
                 <TextField
+                {...register('aux_scans_to_average', {
+                  valueAsNumber: true,
+                })
+                }
                   label="Auxiliary Scans to Average"
                   type="number"
                   variant="outlined"
@@ -278,6 +305,7 @@ const SpectrometerForm = ({
               defaultValue={spectrometer.description}
               render={({ field }) => (
                 <TextField
+                
                   label="Description"
                   variant="outlined"
                   fullWidth

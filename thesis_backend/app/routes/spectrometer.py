@@ -37,7 +37,7 @@ def do_el_measurement():
     try:
         # Calls the create_experiment method which calls the do_el_experiment method and puts it into the message queue
         metadata = request.get_json()["data"]
-        print(metadata)
+
         experiment_id = Spectrometer().create_experiment(
             metadata, request.headers["Smuport"])
         return jsonify({"id": experiment_id})
@@ -184,7 +184,7 @@ def update_spectrometer_by_id(id):
         req = request.get_json()
 
         spectrometer = SpectrometerDb.update_spectrometer(
-            id, name=req["name"], description=req["description"], serial_number=req["serial_number"], manufacturer=req["manufacturer"], model=req["model"])
+            id, name=req["name"], description=req["description"], serial_number=req["serial_number"], manufacturer=req["manufacturer"], model=req["model"], low_interpolation=req["low_interpolation"], high_interpolation=req["high_interpolation"], cal_integration_time=req["cal_integration_time"], cal_scans_to_average=req["cal_scans_to_average"], aux_integration_time=req["aux_integration_time"], aux_scans_to_average=req["aux_scans_to_average"])
         return jsonify(spectrometer)
     except Exception as e:
         print(e)
@@ -200,7 +200,7 @@ def connect_spectrometer_by_id(id):
         handle = Spectrometer().connect(serial_number)
 
         # Successfully connected so mark in DB for recent connection
-        if handle:
+        if handle is not None:
             SpectrometerDb.mark_connected(id)
 
         return jsonify({"message": "Connected to Spectrometer"})

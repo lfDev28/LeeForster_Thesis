@@ -270,9 +270,10 @@ class Smu:
             keithley.reset()  # Reseting the instrument
             time.sleep(1)
             # Setting the source to voltage
+            keithley.source_current_range = 20e-3
             keithley.use_rear_terminals()  # NEED THIS TO OUTPUT TO THE CORRECT TERMINAL
             keithley.apply_current()  # Setting the source to current
-            keithley.compliance_voltage = compliance  # Setting the compliance
+            keithley.compliance_voltage = 20  # Setting the compliance
             keithley.enable_source()  # Enabling the source
             keithley.measure_voltage()  # Setting up to measure current
             
@@ -305,7 +306,7 @@ class Smu:
     def set_current(self, port, current, compliance):
         try:
             keithley = self.setup_current_source(port, current, compliance)
-            keithley.source_current = current 
+            keithley.source_current = current * 1e-3 #mA conversion
             return "Current set to " + str(current) + "A"
         except Exception as e:
             raise Exception("Failed to set current: " + str(e))

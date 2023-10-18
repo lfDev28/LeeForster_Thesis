@@ -85,7 +85,6 @@ class CalibrationDb(db.Document):
 
     @staticmethod
     def add_dark_spectrum(cal_id, serial_number, dark_spectrum):
-        print("adding dark spectrum")
         calibration = CalibrationDb.get_calibration_by_id(cal_id)
 
         cal = {
@@ -98,15 +97,21 @@ class CalibrationDb(db.Document):
 
     @staticmethod
     def add_dark_aux_spectrum(cal_id, serial_number, dark_aux_spectrum):
-        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+        try:
+            print("adding dark aux spectrum")
+            calibration = CalibrationDb.get_calibration_by_id(cal_id)
 
-        cal = {
-            f'set__calibration_by_serial__{serial_number}__dark_aux_spectrum': dark_aux_spectrum,
-        }
+            cal = {
+                f'set__calibration_by_serial__{serial_number}__dark_aux_spectrum': dark_aux_spectrum,
+            }
 
-        calibration.update(**cal)
-        calibration.save()
-        return calibration
+            calibration.update(**cal)
+            calibration.save()
+            return calibration
+    
+        except Exception as e:
+            print(e)
+            raise Exception(f"Failed to add dark aux spectrum: {str(e)}")
 
     @staticmethod
     def add_calibration_spectrum(cal_id, serial_number, calibration_spectrum):
@@ -194,4 +199,8 @@ class CalibrationDb(db.Document):
 
         calibration.save()
         return calibration
-    
+
+    @staticmethod 
+    def get_aux_calibration_spectrum(cal_id, serial_number):
+        calibration = CalibrationDb.get_calibration_by_id(cal_id)
+        return calibration.calibration_by_serial[serial_number].aux_calibration_spectrum    

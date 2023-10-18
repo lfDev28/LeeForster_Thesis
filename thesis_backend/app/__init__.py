@@ -23,7 +23,7 @@ def create_app(config=None):
 
     app.config['MONGODB_SETTINGS'] = {
         'db': "Development",
-        'host': 'mongodb',
+        'host': 'localhost',
         'port': 27017
     }
     
@@ -32,7 +32,7 @@ def create_app(config=None):
     # Registering the celery
     app.config.from_mapping(
         CELERY=dict(
-        broker_url="amqp://rabbitmq",
+        broker_url="amqp://localhost:5672/",
         result_backend="rpc://",
         task_ignore_result=True
         )

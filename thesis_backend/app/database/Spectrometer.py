@@ -53,7 +53,7 @@ class SpectrometerDb(db.Document):
         return spectrometer
     
     @staticmethod
-    def update_spectrometer(id, name, description, manufacturer, model, serial_number, low_interpolation, high_interpolation, cal_integration_time, cal_scans_to_average):
+    def update_spectrometer(id, name, description, manufacturer, model, serial_number, low_interpolation, high_interpolation, cal_integration_time, cal_scans_to_average, aux_integration_time, aux_scans_to_average):
         spectrometer = SpectrometerDb.objects(id=id).first()
         spectrometer.update(
             name=name,
@@ -64,7 +64,9 @@ class SpectrometerDb(db.Document):
             low_interpolation=low_interpolation,
             high_interpolation=high_interpolation,
             cal_integration_time=cal_integration_time,
-            cal_scans_to_average=cal_scans_to_average
+            cal_scans_to_average=cal_scans_to_average,
+            aux_integration_time=aux_integration_time,
+            aux_scans_to_average=aux_scans_to_average
             )
                             
         return spectrometer

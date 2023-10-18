@@ -60,6 +60,17 @@ ocean_insight_data = {
     2300.00: 1.77459E01,
     2400.00: 1.47701E01,
 }
+
+wavelengths = list(ocean_insight_data.keys())
+values = list(ocean_insight_data.values())
+
+# Interpolation
+desired_wavelengths = np.arange(350, 1701, 1)  # Create an array from 350 to 1700 with a step of 1
+interpolated_values = np.interp(desired_wavelengths, wavelengths, values)
+
+# Convert the interpolated data back to a dictionary for further processing
+interpolated_ocean_data = dict(zip(desired_wavelengths, interpolated_values))
+
 def get_ocean_data(wavelength: float) -> float:
     """Returns the Ocean Insight spectrum value for a given wavelength."""
     # Find the closest available wavelength in the dictionary
@@ -104,6 +115,8 @@ class Spectrometer:
                 device_info["serial_number"] = device_list[i].SerialNumber.decode(
                     "utf-8")
                 devices.append(device_info)
+                print("Device " + str(i) + " serial number: " + str(device_list[i].SerialNumber.decode(
+                    "utf-8")) + " User Friendly Name: " + str(device_list[i].UserFriendlyName.decode("utf-8")))
 
             return devices
         except Exception as e:
@@ -222,8 +235,29 @@ class Spectrometer:
             devices = spectrometer.get_devices()
             smu = Smu()
 
-            # First we need to apply the current to the LED under test
+            # First we capture a dark spectrum to later subtract from the raw spectrum
+
+            # Loop through each spectrometer in the experiment
+            for device in devices:
+                print("Connecting to device: " + str(device["handle"]))
+                cfg, pixels = spectrometer.configure_device(
+                    device["handle"], integration_time, scans_to_average)
+
+                raw_wavelengths, raw_spectrum = spectrometer.get_spectrum_and_wavelength(
+                    device["handle"], cfg, pixels)
+
+                # Interpolate the data first
+                _, spectrum = spectrometer.interpolate_spectrum(raw_wavelengths, raw_spectrum, device["serial_number"])
+
+                # Store the dark spectrum in the database
+                
+                ElExperiment.add_dark_spectrum_by_serial(experiment_id, str(device["serial_number"]), spectrum)
+
+
+            # Then we need to apply the current to the LED under test
             smu.set_current(port, current, compliance)
+            time.sleep(2)
+
 
             voltage = smu.measure_voltage(port)
 
@@ -231,6 +265,7 @@ class Spectrometer:
             ElExperiment.add_metadata(
                 experiment_id=experiment_id, key="Voltage (V)", value=voltage)
 
+            experiment = ElExperiment.get_experiment_by_id(experiment_id)
             # Then take measurements for each spectrometer
             for device in devices:
                 print("Connecting to device: " + str(device["handle"]))
@@ -242,9 +277,15 @@ class Spectrometer:
 
                 # Interpolate the data first
                 wavelengths, spectrum = spectrometer.interpolate_spectrum(raw_wavelengths, raw_spectrum, device["serial_number"])
-             
+
+                # We first subtract the raw data from the experiment
+                
+                dark_spectrum = experiment.values_by_spectrometer[device["serial_number"]].dark_spectrum
+
+                corrected_spectrum = [raw - dark for raw, dark in zip(spectrum, dark_spectrum)]
+
                 ElExperiment.add_data_by_serial(
-                    experiment_id, str(device["serial_number"]), wavelengths, spectrum)
+                    experiment_id, str(device["serial_number"]), wavelengths, corrected_spectrum)
                 spectrometer.disconnect(device["handle"])
 
             # Shutdown the SMU as we are finished with it here
@@ -255,34 +296,34 @@ class Spectrometer:
 
             # Here we will do post processing to get total power and EL Quantum Yield, we will use the data from both spectrometers
 
-            # Fetch the experiment based on the provided ID
-            experiment = ElExperiment.get_experiment_by_id(experiment_id)
+            # # Fetch the experiment based on the provided ID
+            # experiment = ElExperiment.get_experiment_by_id(experiment_id)
 
-            if not experiment:
-                raise ValueError(f"No experiment found with ID: {experiment_id}")
+            # if not experiment:
+            #     raise ValueError(f"No experiment found with ID: {experiment_id}")
             
-            # Stitch the wavelengths and spectra together
+            # # Stitch the wavelengths and spectra together
 
-            all_wavelengths = []
-            all_spectrum = []
+            # all_wavelengths = []
+            # all_spectrum = []
             
-            for serial, spec_values in experiment.calibrated_values_by_spectrometer.items():
-                all_wavelengths.extend(spec_values.wavelengths)
-                all_spectrum.extend(spec_values.spectrum)
+            # for serial, spec_values in experiment.calibrated_values_by_spectrometer.items():
+            #     all_wavelengths.extend(spec_values.wavelengths)
+            #     all_spectrum.extend(spec_values.spectrum)
 
-            total_power = spectrometer.measure_total_power(all_spectrum, all_wavelengths)
+            # total_power = spectrometer.measure_total_power(all_spectrum, all_wavelengths)
 
-            ElExperiment.add_metadata(experiment_id, "Total Power (W)", total_power)
+            # ElExperiment.add_metadata(experiment_id, "Total Power (W)", total_power)
 
-            # Calculate the number of photons per second
-            photons_per_second = total_power / (H_PLANCK * C_LIGHT)
+            # # Calculate the number of photons per second
+            # photons_per_second = total_power / (H_PLANCK * C_LIGHT)
 
-            # Calculate the number of electrons per second
-            electrons_per_second = photons_per_second / Q_ELECTRON
+            # # Calculate the number of electrons per second
+            # electrons_per_second = photons_per_second / Q_ELECTRON
 
-            quantum_yield = spectrometer.measure_quantum_yield(photons_per_second, electrons_per_second)
+            # quantum_yield = spectrometer.measure_quantum_yield(photons_per_second, electrons_per_second)
 
-            ElExperiment.add_metadata(experiment_id, "Quantum Yield (%)", quantum_yield)
+            # ElExperiment.add_metadata(experiment_id, "Quantum Yield (%)", quantum_yield)
 
             # Mark the experiment as completed in the database and then return to user
             finished_experiment = ElExperiment.mark_completed(experiment_id)
@@ -305,7 +346,7 @@ class Spectrometer:
 
             # Beginning the experiment in the queue
             self.do_el_experiment.delay(
-                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, 5, metadata["calibration"])
+                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, 10, metadata["calibration"])
 
             return str(experiment.id)
 
@@ -369,19 +410,13 @@ class Spectrometer:
                 # Fetch the calibration data for this specific spectrometer
                 cal_data = cal.calibration_by_serial[serial]
 
-                # Interpolate the ocean_insight_data to match the spectrometer's wavelengths
-                # Compute the gradient of the ocean insight data
-                corrected_spectrum = [raw - dark for raw, dark in zip(spec_values.spectrum, cal_data.dark_spectrum)]
+                # First we divide the spectrum by the calibration_spectrum
+                spectral_radiance = [spectrum / calibration_spectrum for spectrum, calibration_spectrum in zip(spec_values.spectrum, cal_data.calibration_spectrum)]
 
-                # Step 2: Interpolate the ocean insight data
-                interpolated_ocean_insight_data = np.interp(spec_values.wavelengths, list(ocean_insight_data.keys()), list(ocean_insight_data.values()))
-
-                # Step 3: Calculate the lamp factor
-                lamp_factor = [ocean / (cal - cal_dark) for ocean, cal, cal_dark in zip(interpolated_ocean_insight_data, cal_data.calibration_spectrum, cal_data.dark_spectrum)]
-
-                # Step 4: Multiply by the lamp factor
-                spectral_radiance = [corrected * lamp for corrected, lamp in zip(corrected_spectrum, lamp_factor)]
-
+                # Then we multiply by the raw spectrum
+                spectral_radiance = [spectral_radiance * raw_spectrum for spectral_radiance, raw_spectrum in zip(spectral_radiance, spec_values.spectrum)]
+                
+            
 
                 # Store the calibrated data (spectral radiance) back into the database
                 ElExperiment.add_calibrated_data_by_serial(experiment_id, serial, spec_values.wavelengths, spectral_radiance)
@@ -486,6 +521,8 @@ class Spectrometer:
         try:
             devices = self.get_devices()
 
+            print("Calibrating darks")
+
             # 1st Loop for "Cal"
             for device in devices:
                 print(f"Calibrating Cal for device: {device['handle']}")
@@ -506,12 +543,13 @@ class Spectrometer:
                 
                 # Interpolating using the spectrometer's serial number
                 wavelengths, spectrum = self.interpolate_spectrum(raw_wavelengths, raw_spectrum, device["serial_number"])
-
+                
+                CalibrationDb.add_wavelengths(cal_id, str(device["serial_number"]), wavelengths)
                 CalibrationDb.add_dark_spectrum(cal_id, str(device["serial_number"]), spectrum)
 
-                self.disconnect(device["handle"])
+                # self.disconnect(device["handle"])
 
-            time.sleep(1)
+            time.sleep(3)
 
             # 2nd Loop for "Aux"
             for device in devices:
@@ -522,18 +560,23 @@ class Spectrometer:
                 if not spectrometer_obj:
                     raise Exception(f"No spectrometer found with serial number {device['serial_number']}")
 
+                print("Found spectrometer")
                 integration_time = spectrometer_obj.aux_integration_time
                 scans_to_average = spectrometer_obj.aux_scans_to_average
 
+                print("Integration time: " + str(integration_time))
                 if integration_time == 0.0 or scans_to_average == 0:
                     raise Exception(f"Aux integration time or scans to average not set for spectrometer {device['serial_number']}")
 
+                print("Configuring device")
                 cfg, pixels = self.configure_device(device["handle"], integration_time, scans_to_average)
+                print("Getting spectrum and wavelength")
                 raw_wavelengths, raw_spectrum = self.get_spectrum_and_wavelength(device["handle"], cfg, pixels)
-                
+                print("Interpolating spectrum")
                 # Interpolating using the spectrometer's serial number
                 wavelengths, spectrum = self.interpolate_spectrum(raw_wavelengths, raw_spectrum, device["serial_number"])
 
+                print("Adding wavelengths")
                 CalibrationDb.add_dark_aux_spectrum(cal_id, str(device["serial_number"]), spectrum)
 
                 self.disconnect(device["handle"])
@@ -605,22 +648,25 @@ class Spectrometer:
                 print(f"Measuring Aux + Cal for device: {device['handle']}")
 
                 # Fetch spectrometer details using serial number
-                spectrometer_obj = SpectrometerDb.get.spectrometer_by_serial(device["serial_number"])
+                spectrometer_obj = SpectrometerDb.get_spectrometer_by_serial(device["serial_number"])
                 if not spectrometer_obj:
                     raise Exception(f"No spectrometer found with serial number {device['serial_number']}")
 
                 # Retrieve integration times
                 cal_integration_time = spectrometer_obj.cal_integration_time
+                cal_scans_to_average = spectrometer_obj.cal_scans_to_average
+
                 aux_integration_time = spectrometer_obj.aux_integration_time  # Assuming you store this in your DB
+                aux_scans_to_average = spectrometer_obj.aux_scans_to_average
 
                 if cal_integration_time == 0.0 or aux_integration_time == 0.0:
                     raise Exception(f"Calibration or Aux integration time not set for spectrometer {device['serial_number']}")
 
-                if cal_integration_time == 0.0 or aux_integration_time == 0.0:
-                    raise Exception(f"Calibration or Aux integration time not set for spectrometer {device['serial_number']}")
-
+                if cal_scans_to_average == 0 or aux_scans_to_average == 0:
+                    raise Exception(f"Calibration or Aux scans to average not set for spectrometer {device['serial_number']}")
+            
                 # Configuring the device
-                cfg, pixels = self.configure_device(device["handle"], aux_integration_time, spectrometer_obj.cal_scans_to_average)  # Using Aux integration time
+                cfg, pixels = self.configure_device(device["handle"], aux_integration_time, aux_scans_to_average)  # Using Aux integration time
                 raw_wavelengths, raw_spectrum = self.get_spectrum_and_wavelength(device["handle"], cfg, pixels)
 
                 # Interpolating using the spectrometer's serial number
@@ -649,7 +695,7 @@ class Spectrometer:
 
 
 
-    def calibration_measure_aux_dut(self, cal_id):
+    def calibration_measure_aux_dut(self, cal_id, port):
         try:
             devices = self.get_devices()
 
@@ -682,7 +728,7 @@ class Spectrometer:
 
                 # Store the sphere calibration factor
                 CalibrationDb.add_sphere_calibration_factor(cal_id, device["serial_number"], sphere_calibration_factor)
-
+                CalibrationDb.add_aux_dut_spectrum(cal_id, device["serial_number"], spectrum_dut)
                 self.disconnect(device["handle"])
 
             return

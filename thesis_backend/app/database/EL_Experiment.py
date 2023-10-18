@@ -91,12 +91,24 @@ class ElExperiment(db.Document):
         return experiment
 
     @staticmethod
-    def add_data_by_serial(experiment_id, serial_number, wavelengths: list[float], spectrum: list[float]):
+    def add_data_by_serial(experiment_id, serial_number, wavelengths: list[float], spectrum: list[float] ):
         experiment = ElExperiment.objects(id=experiment_id).first()
 
         update_dict = {
             f'set__values_by_spectrometer__{serial_number}__wavelengths': wavelengths,
             f'set__values_by_spectrometer__{serial_number}__spectrum': spectrum
+        }
+
+        experiment.update(**update_dict)
+
+        return experiment
+    
+    @staticmethod
+    def add_dark_spectrum_by_serial(experiment_id, serial_number, spectrum: list[float] ):
+        experiment = ElExperiment.objects(id=experiment_id).first()
+
+        update_dict = {
+            f'set__values_by_spectrometer__{serial_number}__dark_spectrum': spectrum
         }
 
         experiment.update(**update_dict)

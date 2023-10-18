@@ -109,7 +109,7 @@ const ElExperimentForm = ({ mutation }: any) => {
               <Controller
                 name="Current (mA)"
                 control={control}
-                defaultValue={1}
+                defaultValue={10}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -130,7 +130,7 @@ const ElExperimentForm = ({ mutation }: any) => {
               <Controller
                 name="Integration Time (ms)"
                 control={control}
-                defaultValue={5}
+                defaultValue={100}
                 render={({ field }) => (
                   <TextField
                     {...field}
@@ -151,7 +151,7 @@ const ElExperimentForm = ({ mutation }: any) => {
               <Controller
                 name="Scans"
                 control={control}
-                defaultValue={1}
+                defaultValue={2}
                 render={({ field }) => (
                   <TextField
                     {...field}
