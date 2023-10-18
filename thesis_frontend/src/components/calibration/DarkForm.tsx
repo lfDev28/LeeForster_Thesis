@@ -19,7 +19,7 @@ const DarkForm = ({ mutation, cal_id, has_data }: TCalibrationFormProps) => {
         variant="contained"
         color="primary"
         onClick={() => mutation?.mutate(cal_id)}
-        disabled={mutation?.isLoading || mutation?.isSuccess || has_data}
+        disabled={mutation?.isLoading}
       >
         Measure Dark
       </Button>

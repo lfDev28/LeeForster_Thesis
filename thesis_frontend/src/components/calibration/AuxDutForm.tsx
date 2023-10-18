@@ -4,7 +4,12 @@ import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
 import { TCalibrationFormProps } from './CalibrationStepper';
 
-const AuxDutForm = ({ mutation, lampMutation, cal_id, has_data }: TCalibrationFormProps) => {
+const AuxDutForm = ({
+  mutation,
+  lampMutation,
+  cal_id,
+  has_data,
+}: TCalibrationFormProps) => {
   return (
     <Box sx={{ mt: 2, padding: 3, border: '1px solid #ddd', borderRadius: 2 }}>
       <Typography variant="h6" gutterBottom>
@@ -18,9 +23,7 @@ const AuxDutForm = ({ mutation, lampMutation, cal_id, has_data }: TCalibrationFo
         variant="contained"
         color="primary"
         onClick={() => mutation?.mutate(cal_id)}
-        disabled={
-          mutation?.isLoading || mutation?.isSuccess || !lampMutation?.isSuccess || has_data
-        }
+        disabled={mutation?.isLoading}
       >
         Measure AUX + DUT
       </Button>

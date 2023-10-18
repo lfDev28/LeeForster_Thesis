@@ -7,7 +7,7 @@ import LoadingSpinner from '../../components/main/LoadingSpinner';
 import CalibrationView from '../../components/calibration/CalibrationView';
 import { mockCalibration } from '../../assets/MockCalibration';
 
-type TCalibrationBySerial = {
+export type TCalibrationBySerial = {
   wavelengths: number[];
   dark_spectrum: number[];
   dark_aux_spectrum: number[];
@@ -77,7 +77,7 @@ const Calibration = () => {
     calibration.status === STATUS.NOT_STARTED ||
     calibration.status === STATUS.IN_PROGRESS
   ) {
-    return <CalibrationStepper calibration={calibration} />;
+    return <CalibrationStepper calibration={calibration} refetch={refetch} />;
   }
 
   return <CalibrationView calibration={calibration} refetch={refetch} />;

@@ -55,7 +55,7 @@ ChartJS.register(
   Zoom
 );
 
-type TLineChart = {
+export type TLineChart = {
   xAxis: number[] | undefined;
   yAxis: number[] | undefined;
   title: string;
