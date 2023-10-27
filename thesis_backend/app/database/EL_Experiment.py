@@ -58,14 +58,14 @@ class ElExperiment(db.Document):
     def mark_completed(id):
         experiment = ElExperiment.objects(id=id).first()
         experiment.update(status="Completed")
-        experiment.update(end_time=datetime.now())
+        experiment.update(end_time=datetime.utcnow())
         return experiment
 
     @staticmethod
     def mark_failed(id):
         experiment = ElExperiment.objects(id=id).first()
         experiment.update(status="Failed")
-        experiment.update(end_time=datetime.now())
+        experiment.update(end_time=datetime.utcnow())
         return experiment
 
     @staticmethod

@@ -5,18 +5,20 @@ services:
     build: 
       context: ./thesis_frontend
       dockerfile: Dockerfile-frontend
-
     ports:
       - "3000:3000"
       
-  backend: 
+  backend:
+    privileged: true 
     build: 
       context: ./thesis_backend
       dockerfile: Dockerfile-flask
-
     ports:
       - "8000:8000"
-
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
+      - /dev/ttyS0:/dev/ttyS0
     depends_on:
       - rabbitmq
       - mongodb
@@ -25,7 +27,6 @@ services:
     image: "mongo:4.4"
     ports:
       - "27017:27017"
-        
     volumes: 
       - "mongodb-data:/data/db"
 
@@ -36,16 +37,18 @@ services:
       - "15672:15672"
 
   celery:
+    privileged: true
     build: 
       context: ./thesis_backend
       dockerfile: Dockerfile-celery
-
     depends_on:
       - rabbitmq
       - mongodb
-
+    devices:
+      - "/dev/bus/usb:/dev/bus/usb"
+      - "/dev/ttyS0:/dev/ttyS0"
+      - "/dev/ttyUSB0:/dev/ttyUSB0"
     command: celery -A run.celery worker --loglevel=info
       
 volumes:
   mongodb-data:
-

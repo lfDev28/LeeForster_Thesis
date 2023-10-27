@@ -97,8 +97,7 @@ function App() {
   if (isError)
     return (
       <div>
-        Error: Error getting devices, please check that the python server is
-        running
+        {JSON.stringify(error)}
       </div>
     );
 

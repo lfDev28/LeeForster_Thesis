@@ -346,7 +346,7 @@ class Spectrometer:
 
             # Beginning the experiment in the queue
             self.do_el_experiment.delay(
-                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, 10, metadata["calibration"])
+                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, metadata["Compliance (V)"], metadata["calibration"])
 
             return str(experiment.id)
 

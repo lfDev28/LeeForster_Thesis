@@ -130,6 +130,8 @@ const Automation = () => {
         [uniqueId]: { ...state.paramValues[uniqueId], [key]: value },
       },
     });
+    
+
   };
 
   const runAutomation = useMutation({
@@ -329,7 +331,11 @@ const Automation = () => {
           <Button
             variant="contained"
             sx={{ mt: 2, ml: 2 }}
-            onClick={() => dispatch({ type: 'TOGGLE_MODAL', payload: true })}
+            onClick={() => {
+              
+              dispatch({ type: 'TOGGLE_MODAL', payload: true })
+            }
+          }
             disabled={state.right?.length === 0}
           >
             Run Automation

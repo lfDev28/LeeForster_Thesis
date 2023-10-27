@@ -23,7 +23,7 @@ class SpectrometerDb(db.Document):
             name=name,
             description=description,
             serial_number = serial_number,
-            last_connected = datetime.now(),
+            last_connected = datetime.utcnow(),
             manufacturer=manufacturer,
             model=model
         )

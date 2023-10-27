@@ -51,6 +51,7 @@ export type State = {
         return { ...state, currentParams: action.payload };
       case 'SET_PARAM_VALUES':
             localStorage.setItem('currentParamsData', JSON.stringify(action.payload));
+            
             return { ...state, paramValues: action.payload };
 
       case 'SET_CHECKED':
@@ -62,6 +63,10 @@ export type State = {
         return { ...state, right: action.payload };
       case 'TOGGLE_MODAL':
         return { ...state, modalOpen: action.payload };
+
+ 
+
+
       default:
         return state;
     }

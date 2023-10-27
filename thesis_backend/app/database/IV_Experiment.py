@@ -17,7 +17,7 @@ class IvExperiment(db.Document):
         experiment = IvExperiment(
             name=name,
             description=description,
-            start_time = datetime.now(),
+            start_time = datetime.utcnow(),
             end_time = None,
             participants=participants,
             metadata=metadata,
@@ -48,14 +48,14 @@ class IvExperiment(db.Document):
     def mark_completed(id):
         experiment = IvExperiment.objects(id=id).first()
         experiment.update(status="Completed")
-        experiment.update(end_time=datetime.now())
+        experiment.update(end_time=datetime.utcnow())
         return experiment
     
     @staticmethod
     def mark_failed(id):
         experiment = IvExperiment.objects(id=id).first()
         experiment.update(status="Failed")
-        experiment.update(end_time=datetime.now())
+        experiment.update(end_time=datetime.utcnow())
         return experiment
 
     @staticmethod

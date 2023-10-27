@@ -2,7 +2,7 @@ import type { TOption } from "../routes/automations/Automation";
 
 type TOptionStatic = Omit<TOption, 'uniqueId'>;
 
-type TParamField = {
+export type TParamField = {
   value: number | string;
   type?: 'text' | 'number' | 'select';
   min?: number;
@@ -25,7 +25,14 @@ const automationOptions: TOptionStatic[] = [
           min: -10,
           max: 10,
           step: 0.1
-        }
+        },
+        "Compliance (mA)": {
+          value: 1,
+          type: 'number',
+          min: 0,
+          max: 10,
+          step: 0.1
+        },
       }
     },
     {
@@ -39,7 +46,14 @@ const automationOptions: TOptionStatic[] = [
           min: 0,
           max: 10,
           step: 0.1
-        }
+        }, 
+        "Compliance (V)": {
+          value: 10,
+          type: 'number',
+          min: -100,
+          max: 100,
+          step: 0.1
+        },
       }
     },
     {
@@ -52,6 +66,13 @@ const automationOptions: TOptionStatic[] = [
           type: 'number',
           min: 0,
           max: 10,
+          step: 0.1
+        },
+        "Compliance (V)": {
+          value: 10,
+          type: 'number',
+          min: -100,
+          max: 100,
           step: 0.1
         },
         "Integration Time (ms)": {
@@ -71,7 +92,7 @@ const automationOptions: TOptionStatic[] = [
           "Calibration": {
             type: "select",
             value: "",
-            optionsEndpoint: "/backend/spectrometer/calibration/"
+            optionsEndpoint: "/backend/calibration/"
           }
       }
     },
@@ -129,20 +150,7 @@ const automationOptions: TOptionStatic[] = [
         },
       },
     },
-    {
-        id: 6,
-      name: "Repeat _ times",
-      keyword: "REPEAT",
-      params: {
-        "Number of times": {
-          value: 5,
-          type: 'number',
-          min: 1,
-          max: 100,
-          step: 1
-        }
-      }
-    },
+ 
     {
         id: 7,
       name: "Repeat steps [x to y], _ times",

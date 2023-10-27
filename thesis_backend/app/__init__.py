@@ -20,7 +20,6 @@ def create_app(config=None):
         app.config.from_object(config)
 
     # Registering the database
-
     app.config['MONGODB_SETTINGS'] = {
         'db': "Development",
         'host': 'localhost',
@@ -32,7 +31,7 @@ def create_app(config=None):
     # Registering the celery
     app.config.from_mapping(
         CELERY=dict(
-        broker_url="amqp://localhost:5672/",
+        broker_url="amqp://localhost:5672//",
         result_backend="rpc://",
         task_ignore_result=True
         )

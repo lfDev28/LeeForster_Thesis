@@ -1,16 +1,38 @@
-FROM python:3.9-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY avaspecx64.dll /app/
+COPY avs-sdk/libavs.so /usr/local/lib/
+COPY avs-sdk/libavs.so.0 /usr/local/lib/
+COPY avs-sdk/libavs.so.0.9 /usr/local/lib/
+COPY avs-sdk/libavs.so.0.9.12 /usr/local/lib/
+COPY avs-sdk/avaspec.h /usr/local/lib/
+COPY avs-sdk/type.h /usr/local/lib/
 
+RUN chmod 755 /usr/local/lib/libavs.so.0.9.12
+RUN ln -sf /usr/local/lib/libavs.so.0.9.12 /usr/local/lib/libavs.so.0
+
+RUN apt-get update && apt-get install -y libusb-1.0-0 && apt-get clean
+
+
+RUN apt-get update && apt-get install -y udev && apt-get clean
+
+# Ensure the directory exists
+RUN mkdir -p /etc/udev/rules.d
+
+# Install and copy Necessary NI-VISA stuff to the container
+COPY NILinux2020DeviceDrivers/ni-software-2020-bionic_20.1.0.49152-0+f0_all.deb /tmp/
+
+RUN apt-get update && \
+    dpkg -i /tmp/ni-software-2020-bionic_20.1.0.49152-0+f0_all.deb || true && \
+    apt-get install -f -y && \
+    apt-get clean && \
+    rm /tmp/ni-software-2020-bionic_20.1.0.49152-0+f0_all.deb
 
 COPY requirements.txt requirements.txt
-
 
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . . 
 
 CMD ["gunicorn", "run:app", "-b", "0.0.0.0:8000"]
-
