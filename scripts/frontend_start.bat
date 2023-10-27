@@ -1,6 +1,3 @@
 @echo off
-cd ../thesis_frontend
-
-npm run dev
-
-exit
+cd %~dp0\..\thesis_frontend
+npm start

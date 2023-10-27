@@ -1,7 +1,9 @@
 @echo off
-cd ../thesis_backend
 
-.\venv\Scripts\activate
+cd %~dp0\..\thesis_backend
 
-celery -A run.celery worker --pool=solo --loglevel=info
-@REM exit
+if "%OS%"=="Windows_NT" (
+    celery -A run.celery worker --pool=solo --loglevel=info
+) else (
+    celery -A run.celery worker --loglevel=info
+)
