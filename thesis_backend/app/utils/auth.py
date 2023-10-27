@@ -14,10 +14,8 @@ class Auth:
         self.access_token = None
 
     def check_credentials(self, username, password):
-        print(username, password)
-        print(self.username, self.password)
-
-        return username == self.username and password == self.password
+        
+        return username.lower() == self.username and password == self.password
     
     def generate_token(self):
         self.access_token = create_access_token(identity=self.username)
