@@ -9,19 +9,24 @@ bp = Blueprint('automation', __name__, url_prefix='/automation')
 
 
 
-
 @bp.route("/", methods=["POST"])
 def handle_tasks():
     try:
         print("Got to handle tasks")
         tasks = request.get_json()
         smu_port = request.headers["Smuport"]
+        notification_email = tasks["Notification Email"]
+
   
 
         for task in tasks:
             keyword = task['keyword']
             params = task['params']
             params['Smuport'] = smu_port
+            params['Notification Email'] = notification_email
+            # If its the final step, we add a "final" kwarg to the function call.
+            if task == tasks[-1]:
+                params['final'] = True
 
 
             # Check if the keyword exists in the map.

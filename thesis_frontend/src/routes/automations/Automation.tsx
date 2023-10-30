@@ -31,6 +31,7 @@ import { reducer, initialState } from '../../utils/automationReducer';
 import { intersection, not, union } from '../../utils/automationHelpers';
 import { useSmu } from '../../components/Context/SmuProvider';
 import axios from 'axios';
+import TextField from '@mui/material/TextField';
 
 export type TOption = {
   id: number;
@@ -130,8 +131,6 @@ const Automation = () => {
         [uniqueId]: { ...state.paramValues[uniqueId], [key]: value },
       },
     });
-    
-
   };
 
   const runAutomation = useMutation({
@@ -161,7 +160,9 @@ const Automation = () => {
     if (!checkSmuPort()) {
       return;
     }
-    runAutomation.mutate(state.right);
+    runAutomation.mutate(state.right, {
+      'Notificfation Email': state.email,
+    });
   };
 
   function renderLabel(
@@ -295,6 +296,20 @@ const Automation = () => {
           Select the automation options you want to run and drag them to the
           order you want them to run in.
         </Typography>
+        <Typography variant="body2" sx={{ mb: 2 }}>
+          If you would like to receive email notifications when the automation
+          is finished or fails, place your email in the text box below.
+        </Typography>
+        <TextField
+          id="outlined-basic"
+          label="Email"
+          fullWidth
+          variant="outlined"
+          onChange={(e) => {
+            dispatch({ type: 'SET_EMAIL', payload: e.target.value });
+          }}
+        />
+
         <Grid container spacing={2} justifyContent="center" alignItems="center">
           <Grid item xs={12} sm={12} md={5.5}>
             {customList('Options', state.left, uuidv4(), 'LEFT')}
@@ -332,10 +347,8 @@ const Automation = () => {
             variant="contained"
             sx={{ mt: 2, ml: 2 }}
             onClick={() => {
-              
-              dispatch({ type: 'TOGGLE_MODAL', payload: true })
-            }
-          }
+              dispatch({ type: 'TOGGLE_MODAL', payload: true });
+            }}
             disabled={state.right?.length === 0}
           >
             Run Automation

@@ -22,6 +22,7 @@ export type State = {
     left: readonly TOption[];
     right: readonly TOption[];
     modalOpen: boolean;
+    email: string;
   };
   
   export const initialState: State = {
@@ -32,7 +33,9 @@ export type State = {
     left: options,
     right: rightColummnData,
     modalOpen: false,
+    email: '',
   };
+  
   
   export type Action =
     | { type: 'SET_ANCHOR_EL'; payload: HTMLElement | null }
@@ -41,7 +44,8 @@ export type State = {
     | { type: 'SET_CHECKED'; payload: readonly TOption[] }
     | { type: 'SET_LEFT'; payload: readonly TOption[] }
     | { type: 'SET_RIGHT'; payload: readonly TOption[] }
-    | { type: 'TOGGLE_MODAL'; payload: boolean };
+    | { type: 'TOGGLE_MODAL'; payload: boolean }
+    | { type: 'SET_EMAIL'; payload: string };
   
   export const reducer = (state: State, action: Action): State => {
     switch (action.type) {
@@ -64,7 +68,8 @@ export type State = {
       case 'TOGGLE_MODAL':
         return { ...state, modalOpen: action.payload };
 
- 
+      case 'SET_EMAIL':
+        return { ...state, email: action.payload };
 
 
       default:
