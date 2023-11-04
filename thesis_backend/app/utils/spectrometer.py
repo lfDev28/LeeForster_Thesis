@@ -1,3 +1,4 @@
+from datetime import datetime
 import time
 import pandas as pd
 import numpy as np
@@ -8,9 +9,9 @@ from ..database.Spectrometer import SpectrometerDb
 from celery import shared_task
 import os
 from ..utils.smu import Smu
-
-
-
+import csv
+from flask import Response
+from io import StringIO
 # Declaring constants for interpolating the specturm
 INTERPOLATED_START_VIS = 350
 INTERPOLATED_END_VIS = 1000
@@ -79,9 +80,6 @@ def get_ocean_data(wavelength: float) -> float:
     if value == 0.0:
         raise ValueError(f"Ocean Insight data for wavelength: {closest_wavelength} is zero.")
     return value
-
-
-
 
 
 class Spectrometer:
@@ -294,6 +292,11 @@ class Spectrometer:
             # We then apply the calibration, this method goes through the recent calibration file and applies it to the data.
             spectrometer.apply_calibration(experiment_id, cal_id)
 
+            """
+            The below code has been commented out as I have not had the chance to test it before submission, and the process needs to be confirmed with
+            the Open Instruments Developer. 
+            """
+
             # Here we will do post processing to get total power and EL Quantum Yield, we will use the data from both spectrometers
 
             # # Fetch the experiment based on the provided ID
@@ -346,7 +349,7 @@ class Spectrometer:
 
             # Beginning the experiment in the queue
             self.do_el_experiment.delay(
-                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, metadata["Compliance (V)"], metadata["calibration"])
+                str(experiment.id), metadata["Current (mA)"], metadata["Integration Time (ms)"], metadata["Scans"], port, 5, metadata["calibration"])
 
             return str(experiment.id)
 
@@ -452,63 +455,6 @@ class Spectrometer:
             print(e)
             raise Exception("Failed to measure quantum yield: " + str(e))
    
-
-    # Placeholder method to add data based on the calibration files to the db. Can ignore.
-    def add_cal_to_db(self, metadata={"test": "test"}):
-        try:
-
-            Desktop_Path = os.path.join(os.path.join(
-                os.environ['USERPROFILE']), 'Desktop')
-
-            cal_file_name = "test-cal.csv"
-
-            cal_path = os.path.join(Desktop_Path, cal_file_name)
-
-            cal_df = pd.read_csv(cal_path, skiprows=9, names=range(12))
-
-            cal = CalibrationDb.new_calibration(metadata)
-
-            for i in range(0, 12, 6):
-                # Extracting serial number from the top cell in each group of 6 columns
-                serial_number = cal_df.iloc[0, i]
-                print(serial_number)
-
-                wavelengths = cal_df.iloc[1:, i].tolist()
-                dark_spectrum = cal_df.iloc[1:, i+1].tolist()
-                dark_aux_spectrum = cal_df.iloc[1:, i+2].tolist()
-                calibration_spectrum = cal_df.iloc[1:, i+3].tolist()
-                aux_calibration_spectrum = cal_df.iloc[1:, i+4].tolist()
-                aux_dut_spectrum = cal_df.iloc[1:, i+5].tolist()
-
-                # remove NaN values if they exist
-                wavelengths = [x for x in wavelengths if str(x) != 'nan']
-                dark_spectrum = [x for x in dark_spectrum if str(x) != 'nan']
-                dark_aux_spectrum = [
-                    x for x in dark_aux_spectrum if str(x) != 'nan']
-                calibration_spectrum = [
-                    x for x in calibration_spectrum if str(x) != 'nan']
-                aux_calibration_spectrum = [
-                    x for x in aux_calibration_spectrum if str(x) != 'nan']
-                aux_dut_spectrum = [
-                    x for x in aux_dut_spectrum if str(x) != 'nan']
-                
-
-                CalibrationDb.add_calibration_by_serial(
-                    cal_id=cal.id,
-                    serial_number=str(serial_number),
-                    wavelengths=wavelengths,
-                    dark_spectrum=dark_spectrum,
-                    dark_aux_spectrum=dark_aux_spectrum,
-                    calibration_spectrum=calibration_spectrum,
-                    aux_calibration_spectrum=aux_calibration_spectrum,
-                    aux_dut_spectrum=aux_dut_spectrum
-                )
-
-            return True
-
-        except Exception as e:
-            print(e)
-            raise Exception("Failed to add calibration to database: " + str(e))
 
     def get_calibration(self):
         try:
@@ -771,5 +717,100 @@ class Spectrometer:
         except Exception as e:
             print(e)
             raise Exception("Failed to interpolate spectrum: " + str(e))
+        
+
+    def write_db_el_to_csv(self, experiment_id):
+        try:
+            experiment = ElExperiment.get_experiment_by_id(experiment_id)
+            if not experiment:
+                raise Exception(f"Experiment with ID {experiment_id} not found.")
+
+            # Create the csv file in the server's downloads folder
+            home_dir = os.path.expanduser("~") 
+            directory = os.path.join(home_dir, "Downloads")
+            
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+            file_name = f'el_data_{timestamp}_id_{experiment_id}.csv'
+            file_path = os.path.join(directory, file_name)
+
+            # Open the file and instantiate the writer
+            with open(file_path, 'w', newline='') as file:
+                writer = csv.writer(file)
+
+                # Write metadata to CSV
+                for key, value in experiment.metadata.items():
+                    writer.writerow([key, value])
+
+                # Space between metadata and values
+                writer.writerow([])
+
+                # Prepare header for the spectrometers
+                headers = []
+                for spectrometer, values in experiment.calibrated_values_by_spectrometer.items():
+                    headers.extend([spectrometer + " Wavelengths (nm)", spectrometer + " Spectral Power (uW/nm)"])
+                writer.writerow(headers)
+
+                # Write values for each spectrometer
+                max_rows = max([len(values.wavelengths) for values in experiment.values_by_spectrometer.values()])
+                for i in range(max_rows):
+                    row = []
+                    for values in experiment.values_by_spectrometer.values():
+                        wavelength = values.wavelengths[i] if i < len(values.wavelengths) else ''
+                        spectrum = values.spectrum[i] if i < len(values.spectrum) else ''
+                        row.extend([wavelength, spectrum])
+                    writer.writerow(row)
+
+            return file_path
+
+        except Exception as e:
+            print(e)
+            raise Exception("Failed to write experiment to csv: " + str(e))
+
+
+    def write_csv_el_to_db(self, file):
+        try:
+            metadata = {}
+            calibrated_values_by_spectrometer = {}
+
+            df = pd.read_csv(file, skip_blank_lines=False, header=None, names=range(4))
+
+            # Identify the blank row
+            blank_index = df.index[df.isnull().all(1)].tolist()[0]
+
+            # Extract metadata before the blank row
+            for index, row in df.iloc[:blank_index].iterrows():
+                key, value = row[0], row[1]
+                metadata[key] = value
+
+            # Assuming 4 columns: two pairs of wavelength and spectral power, each associated with a spectrometer.
+            headers = df.iloc[blank_index + 1]
+
+            for i in range(0, 4, 2):  # We step by 2 because every pair of columns corresponds to one spectrometer
+                # Extract spectrometer serial from header
+                spectrometer_serial = headers[i].split()[0]
+
+                # Extract wavelengths and spectral power
+                wavelengths = df.iloc[blank_index + 2:, i].dropna().tolist()
+                spectralPower = df.iloc[blank_index + 2:, i + 1].dropna().tolist()
+
+                calibrated_values_by_spectrometer[spectrometer_serial] = {
+                    'wavelengths': wavelengths,
+                    'spectrum': spectralPower
+                }
+
+            ElExperiment.create_experiment(
+                name="EL Experiment",
+                description="EL Experiment",
+                metadata=metadata,
+                participants=["Participant 1", "Participant 2"],
+                status="Completed",
+                calibrated_values_by_spectrometer=calibrated_values_by_spectrometer
+            )
+
+        except Exception as e:
+            print(e)
+            raise Exception("Failed to write file to db: " + str(e))
+
+
 
 

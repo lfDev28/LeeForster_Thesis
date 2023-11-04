@@ -26,7 +26,7 @@ type TIVData = {
   };
   status: string;
   participants: string[];
-  metadata: Record<string, any>[];
+  metadata: Record<string, any>;
   voltages: number[];
   currents: number[];
 };

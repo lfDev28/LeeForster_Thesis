@@ -25,7 +25,8 @@ class ElExperiment(db.Document):
         db.EmbeddedDocumentField(SpectrometerValues))
 
     @staticmethod
-    def create_experiment(name, description, metadata, participants, status):
+    def create_experiment(name, description, metadata, participants, status, calibrated_values_by_spectrometer={}):
+    
 
         experiment = ElExperiment(
             name=name,
@@ -36,7 +37,7 @@ class ElExperiment(db.Document):
             metadata=metadata,
             status=status,
             values_by_spectrometer={},
-            calibrated_values_by_spectrometer={}
+            calibrated_values_by_spectrometer=calibrated_values_by_spectrometer
         )
 
         experiment.save()

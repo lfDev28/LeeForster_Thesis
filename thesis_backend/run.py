@@ -7,6 +7,10 @@ app = create_app()
 celery = ext_celery.celery
 
 
+# if __name__ == '__main__':
+#     app.run(debug=True)
+
+
 if __name__ == '__main__':
     # Check for linux or windows to run the app.
     if 'linux' in sys.platform:

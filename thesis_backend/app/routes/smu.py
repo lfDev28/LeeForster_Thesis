@@ -128,3 +128,29 @@ def update_iv_experiment(id):
     except Exception as e:
         print(e)
         return abort(400, "Failed to update iv experiment: " + str(e))
+
+@bp.route("/iv/<id>/download", methods=["GET"])
+def send_iv_as_csv(id):
+    try:
+        smu = Smu()
+        
+        file_path = smu.write_db_iv_to_csv(id)
+        return send_file(file_path, as_attachment=True, mimetype="text/csv", download_name=file_path.split("/")[-1])
+
+    except Exception as e:
+        print(e)
+        return abort(400, "Failed to create csv from experiment: " + str(e))
+    
+@bp.route("/iv/upload", methods=["POST"])
+def upload_csv_to_db():
+    try:
+        smu = Smu()
+        
+        file = request.files['file']
+
+        smu.write_csv_iv_to_db(file)
+
+        return jsonify({"message": "File uploaded successfully"})
+
+    except Exception as e:
+        return abort(400, "Failed to upload csv to db: " + str(e))

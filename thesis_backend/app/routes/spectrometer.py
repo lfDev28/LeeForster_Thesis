@@ -1,4 +1,4 @@
-from flask import Blueprint, abort, jsonify, request
+from flask import Blueprint, abort, jsonify, request, send_file
 from app.utils.spectrometer import Spectrometer
 from ..database.EL_Experiment import ElExperiment
 from ..database.Spectrometer import SpectrometerDb
@@ -299,3 +299,27 @@ def control_aux_lamp():
     except Exception as e:
         print(e)
         return abort(400, "Failed to get calibration: " + str(e))
+
+@bp.route("/el/<id>/download", methods=["GET"])
+def send_el_as_csv(id):
+    try:
+        spectrometer = Spectrometer()
+
+        file_path = spectrometer.write_db_el_to_csv(id)
+
+        return send_file(file_path, as_attachment=True, mimetype="text/csv", download_name=file_path.split("/")[-1])    
+
+    except Exception as e:
+        print(e)
+        return abort(400, "Failed to create csv from experiment: " + str(e))
+    
+@bp.route("/el/upload", methods=["POST"])
+def upload_csv_to_db():
+    try:
+        spectrometer = Spectrometer()
+        file = request.files["file"]
+        spectrometer.write_csv_el_to_db(file)
+        return jsonify({"message": "CSV uploaded successfully"})
+    except Exception as e:
+        return abort(400, "Failed to upload csv to db: " + str(e))
+    

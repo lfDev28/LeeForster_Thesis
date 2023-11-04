@@ -19,6 +19,7 @@ const AuxCalForm = ({
         Turn off the calibration lamp but do not remove it from the sphere. Turn
         on the auxiliary lamp and allow it to stabilize for 10 minutes.
       </Typography>
+      <div className="space-x-4">
       <Button
         variant="contained"
         color="primary"
@@ -42,6 +43,7 @@ const AuxCalForm = ({
       >
         Measure Aux + Cal
       </Button>
+      </div>
     </Card>
   );
 };

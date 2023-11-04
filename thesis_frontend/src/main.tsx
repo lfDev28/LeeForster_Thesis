@@ -52,11 +52,11 @@ const router = createBrowserRouter([
             element: <RunExperiment />,
           },
           {
-            path: '/read-iv-file',
+            path: '/file-management/iv',
             element: <ReadIVFile />,
           },
           {
-            path: '/read-el-file',
+            path: '/file-management/el',
             element: <ReadElFile />,
           },
           {

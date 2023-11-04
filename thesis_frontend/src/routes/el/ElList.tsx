@@ -4,7 +4,7 @@ import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import IconButton from '@mui/material/IconButton';
 import Delete from '@mui/icons-material/Delete';
 import Tooltip from '@mui/material/Tooltip';
-import Edit from '@mui/icons-material/Edit';
+import CloudDownload from '@mui/icons-material/CloudDownload';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import axios from 'axios';
 import { useModal } from '../../components/Context/ModalContext';
@@ -30,6 +30,29 @@ const ElList = () => {
     
         },
   });
+
+  const downloadFile = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await axios.get(`/backend/spectrometer/el/${id}/download`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      return res.data;
+    },
+    onError: (err) => {
+      showTypedToast(EToastTypes.ERROR, JSON.stringify(err));
+    },
+    onSuccess: (data) => {
+      showTypedToast(EToastTypes.SUCCESS, 'Successfully downloaded EL Experiment');
+      const url = window.URL.createObjectURL(new Blob([data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `el_experiment_download_${new Date().toLocaleString('en-AU')}.csv`);
+      document.body.appendChild(link);
+      link.click();
+    }
+  })
 
   const columns: GridColDef[] = [
     {
@@ -87,6 +110,14 @@ const ElList = () => {
                 onClick={() => deleteModal(handleDelete, params.row._id.$oid, `Are you sure you want to delete item "${params.row.name || params.row._id.$oid}"?`)}
               >
                 <Delete fontSize="inherit" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Download as CSV">
+              <IconButton aria-label="download" size="small" color="info" onClick={(e) => {
+                e.preventDefault();
+                downloadFile.mutate(params.row._id.$oid);
+              }}>
+                <CloudDownload fontSize="inherit" />
               </IconButton>
             </Tooltip>
           </div>

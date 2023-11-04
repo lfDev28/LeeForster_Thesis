@@ -9,7 +9,7 @@ import os
 from pymeasure.instruments.keithley import Keithley2450
 import pandas as pd
 from ..database.IV_Experiment import IvExperiment
-
+from flask import make_response
 
 class Smu:
     def __init__(self):
@@ -62,29 +62,6 @@ class Smu:
         except Exception as e:
             print(e)
             raise Exception("Failed to read file: " + str(e))
-# DONE
-
-    def write_file_to_db(self, file):
-        try:
-            data = self.read_file(file)
-            metadata = data["metadata"]
-            voltages = data["voltages"]
-            currents = data["currents"]
-
-            experiment = IvExperiment.create_experiment(
-                name="Test 1",
-                description="First test of writing a file to the db",
-                metadata=metadata,
-                participants=["Participant 1", "Participant 2"],
-                voltages=voltages,
-                currents=currents,
-                status="Completed"
-            )
-
-            return experiment
-
-        except Exception as e:
-            raise Exception("Failed to write file to db: " + str(e))
 
     # DONE
 
@@ -200,22 +177,6 @@ class Smu:
             print(e)
             raise Exception("Failed to create directory: " + str(e))
 
-    def write_db_iv_experiment_to_csv(self, experiment_id: str) -> str:
-        try:
-            # Perform data fetching from the database with experiment_id
-
-            # Placeholder data for now
-            metadata = []
-            voltages = []
-            currents = []
-
-            # Write the data to csv
-            file_path = self.write_iv_to_csv(metadata, voltages, currents)
-            return file_path
-
-        except Exception as e:
-            print(e)
-            raise Exception("Failed to write experiment to csv: " + str(e))
 
     def create_iv_experiment_db(self, port: str, metadata: dict) -> str:
         try:
@@ -242,8 +203,8 @@ class Smu:
         try:
             print('Starting task - run_iv_experiment')
            
-          
-            keithley = Smu().setup_voltage_source(port, metadata["Compliance (mA)"])
+            keithley = Smu()
+            keithley = keithley.setup_voltage_source(port, metadata["Compliance (mA)"])
 
                                
             for V in N.linspace(start=metadata["Start (V)"], stop=metadata["Stop (V)"], num=metadata["Points"], endpoint=True):
@@ -256,7 +217,7 @@ class Smu:
 
             finished_experiment = IvExperiment.mark_completed(experiment_id)
 
-            # self.smu.shutdown()
+            keithley.shutdown()
             return finished_experiment
 
         except Exception as e:
@@ -317,3 +278,70 @@ class Smu:
             return keithley.voltage
         except Exception as e:
             raise Exception("Failed to measure voltage: " + str(e))
+        
+
+    def write_db_iv_to_csv(self, experiment_id):
+        try:
+            # Retrieve the experiment from the database
+            experiment = IvExperiment.get_experiment_by_id(experiment_id)
+            if not experiment:
+                raise Exception(f"Experiment with ID {experiment_id} not found.")
+
+            # Create the csv file in the servers downloads folder
+            home_dir = os.path.expanduser("~") 
+            directory = os.path.join(home_dir, "Downloads")
+            
+
+            timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
+
+            file_name = f'iv_data_{timestamp}_id_{experiment_id}.csv'
+            file_path = os.path.join(directory, file_name)
+
+            # Make file and instantiate the writer
+
+
+            with open(file_path, 'w', newline='') as file:
+                writer = csv.writer(file)
+                metadata = experiment.metadata
+                for key, value in metadata.items():
+                    writer.writerow([key, value])
+
+                # Write blank line
+                writer.writerow([])
+                writer.writerow(["Voltage (V)", "Current (A)"])
+
+  
+                for voltage, current in zip(experiment.voltages, experiment.currents):
+                    writer.writerow([voltage, current])
+
+
+
+            return file_path
+        except Exception as e:
+            print(e)
+            raise Exception("Failed to write experiment to csv: " + str(e))
+
+
+    def write_csv_iv_to_db(self, file): 
+        try:
+            data = self.read_file(file)
+            metadata = data["metadata"]
+            voltages = data["voltages"]
+            currents = data["currents"]
+
+            experiment = IvExperiment.create_experiment(
+                name="Uploaded File",
+                description="",
+                metadata=metadata,
+                participants=[],
+                voltages=voltages,
+                currents=currents,
+                status="Completed"
+            )
+
+            return experiment
+
+        except Exception as e:
+            raise Exception("Failed to write file to db: " + str(e))
+  
+

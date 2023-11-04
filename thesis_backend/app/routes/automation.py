@@ -15,7 +15,7 @@ def handle_tasks():
         print("Got to handle tasks")
         tasks = request.get_json()
         smu_port = request.headers["Smuport"]
-        notification_email = tasks["Notification Email"]
+        # notification_email = tasks["Notification Email"]
 
   
 
@@ -23,10 +23,10 @@ def handle_tasks():
             keyword = task['keyword']
             params = task['params']
             params['Smuport'] = smu_port
-            params['Notification Email'] = notification_email
+            # params['Notification Email'] = notification_email
             # If its the final step, we add a "final" kwarg to the function call.
-            if task == tasks[-1]:
-                params['final'] = True
+            # if task == tasks[-1]:
+            #     params['final'] = True
 
 
             # Check if the keyword exists in the map.
@@ -45,5 +45,5 @@ def handle_tasks():
         return jsonify({"status": "Tasks have been dispatched!"}), 200
 
     except Exception as e:
-        print(e)
+        print(f"Failed to run automation: {str(e)}")
         return abort(400, "Failed to run automation: " + str(e))

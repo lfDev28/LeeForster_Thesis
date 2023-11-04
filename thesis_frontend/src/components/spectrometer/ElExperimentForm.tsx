@@ -142,7 +142,7 @@ const ElExperimentForm = ({ mutation }: any) => {
                     required
                     variant="outlined"
                     type="number"
-                    inputProps={{ min: 5, max: 500, step: 1 }}
+                    inputProps={{ step: 1 }}
                   />
                 )}
               />

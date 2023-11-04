@@ -62,21 +62,21 @@ const automationOptions: TOptionStatic[] = [
       keyword: "EL_MEASUREMENT",
       params: {
         "Current (mA)": {
-          value: 1,
+          value: 20,
           type: 'number',
           min: 0,
           max: 10,
           step: 0.1
         },
         "Compliance (V)": {
-          value: 10,
+          value: 5,
           type: 'number',
           min: -100,
           max: 100,
           step: 0.1
         },
         "Integration Time (ms)": {
-          value: 100,
+          value: 1000,
           type: 'number',
           min: 10,
           max: 1000,
@@ -91,7 +91,7 @@ const automationOptions: TOptionStatic[] = [
         },
           "Calibration": {
             type: "select",
-            value: "",
+            value: "65289e87e876410a175918de",
             optionsEndpoint: "/backend/calibration/"
           }
       }
@@ -157,7 +157,7 @@ const automationOptions: TOptionStatic[] = [
       keyword: "REPEAT_STEPS",
       params: {
         "Number of times": {
-          value: 5,
+          value: 20,
           type: 'number',
           min: 1,
           max: 100,
@@ -206,7 +206,7 @@ const automationOptions: TOptionStatic[] = [
           step: 1
         },
         "Delay (s)": {
-          value: 5,
+          value: 10,
           type: 'number',
           min: 1,
           max: 60,

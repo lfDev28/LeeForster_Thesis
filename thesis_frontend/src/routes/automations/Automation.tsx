@@ -41,6 +41,12 @@ export type TOption = {
   params: TParams;
 };
 
+
+type TSubmitData = {
+  data: readonly TOption[];
+  email?: string;
+}
+
 const Automation = () => {
   const [state, dispatch] = React.useReducer(reducer, initialState);
   const { showTypedToast } = useToast();
@@ -134,7 +140,7 @@ const Automation = () => {
   };
 
   const runAutomation = useMutation({
-    mutationFn: async (data: readonly TOption[]) => {
+    mutationFn: async (data: TSubmitData ) => {
       const res = await axios.post('/backend/automation/', data, {
         headers: {
           'Content-Type': 'application/json',
@@ -160,9 +166,14 @@ const Automation = () => {
     if (!checkSmuPort()) {
       return;
     }
-    runAutomation.mutate(state.right, {
-      'Notificfation Email': state.email,
-    });
+
+    const submitData = {
+      data: state.right,
+      email: state.email,
+    };
+
+    
+    runAutomation.mutate(state.right);
   };
 
   function renderLabel(
@@ -301,6 +312,9 @@ const Automation = () => {
           is finished or fails, place your email in the text box below.
         </Typography>
         <TextField
+        sx={{
+          mb:2,
+        }}
           id="outlined-basic"
           label="Email"
           fullWidth

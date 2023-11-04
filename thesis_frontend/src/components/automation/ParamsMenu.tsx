@@ -67,11 +67,11 @@ const ParamsMenu = ({
             } = useQuery({
               queryKey: [fieldData.optionsEndpoint],
               queryFn: async () => {
-                return generateMockCalibrations(5);
-                // const res = await axios.get(
-                //   fieldData.optionsEndpoint as string
-                // );
-                // return res.data;
+                // return generateMockCalibrations(5);
+                const res = await axios.get(
+                  fieldData.optionsEndpoint as string
+                );
+                return res.data;
               },
             });
 
